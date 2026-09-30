@@ -1618,6 +1618,28 @@ ptyxis_tab_set_title_prefix (PtyxisTab  *self,
     }
 }
 
+static const char *
+ptyxis_tab_strip_local_host (const char *title)
+{
+  const char *host = g_get_host_name ();
+  const char *user = g_get_user_name ();
+  const char *dot = strchr (host, '.');
+  gsize user_len = strlen (user);
+  gsize host_len = dot ? (gsize)(dot - host) : strlen (host);
+
+  /* Shells commonly set the title to "user@host: dir". When that is the
+   * local machine, the host is noise, so only keep the directory.
+   */
+  if (strncmp (title, user, user_len) == 0 &&
+      title[user_len] == '@' &&
+      strncmp (&title[user_len + 1], host, host_len) == 0 &&
+      title[user_len + 1 + host_len] == ':' &&
+      title[user_len + 2 + host_len] == ' ')
+    return &title[user_len + 3 + host_len];
+
+  return title;
+}
+
 char *
 ptyxis_tab_dup_title (PtyxisTab *self)
 {
@@ -1636,7 +1658,7 @@ ptyxis_tab_dup_title (PtyxisTab *self)
       G_GNUC_END_IGNORE_DEPRECATIONS
 
       if (window_title && window_title[0])
-        g_string_append (gstr, window_title);
+        g_string_append (gstr, ptyxis_tab_strip_local_host (window_title));
       else if (self->command != NULL && self->command[0] != NULL)
         g_string_append (gstr, self->command[0]);
       else if (self->initial_title != NULL)
