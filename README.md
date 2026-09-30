@@ -1,3 +1,51 @@
+# Ptyxis (Minted)
+
+This is [Ptyxis](https://gitlab.gnome.org/chergert/ptyxis) with a small series
+of patches by Linux Mint.
+
+## Why is it called "Minted"?
+
+Out of respect for Ptyxis, to show that this version is a *little bit* different.
+
+It's still very much Ptyxis but the changes are significant enough to make it clear
+to users they're not using the *official* version.
+
+Ptyxis was developed by Christian Hergert. In February 2026, Christian announced
+that he would step back or at least limit his involvement in the project.
+
+https://blogs.gnome.org/chergert/2026/02/06/mid-life-transitions/
+
+Merge requests on the upstream tracker are currently not being reviewed.
+
+When Christian steps back in or a new team takes over, we'll propose the changes
+upstream and see where we go from there.
+
+## What's different?
+
+ * A Mint palette was added
+ * Tab titles are simpler. The local `user@host:` prefix is omitted. The ssh command is omitted for remote shells.
+ * Tab colors are used not only in the headerbar but also in the overview, tab bar and close dialog.
+ * The bell color is also used for shells which are running a command.
+ * The headerbar subtitle is hidden.
+ * The overview doesn't close when a new tab is added from it.
+ * The context menu was given a "Copy Last Output" item.
+ * Default settings were changed: accessibility enabled (as in Ubuntu), audible bell disabled, new tabs next to the current one, slightly larger
+   default window size, bright colors for bold text.
+ * The About dialog says "Ptyxis (Minted)" and the links point to https://github.com/linuxmint/ptyxis-minted.
+
+## Reporting problems
+
+Please report issues with these changes here:
+<https://github.com/linuxmint/ptyxis-minted/issues>.
+
+To use the latest and official version of Ptyxis, please use the Flatpak.
+
+If a problem also happens in the Flatpak version, it is an upstream problem.
+
+The rest of this file is upstream's README.
+
+---
+
 ![Ptyxis Logo](https://gitlab.gnome.org/chergert/ptyxis/-/raw/main/data/icons/ptyxis.svg)
 
 [![License: GPL v3+](https://img.shields.io/badge/License-GPL%20v3%2B-blue.svg)](https://gitlab.gnome.org/chergert/ptyxis/-/blob/main/COPYING)

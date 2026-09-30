@@ -1422,17 +1422,17 @@ ptyxis_application_about (GSimpleAction *action,
 
   adw_show_about_dialog (GTK_WIDGET (window),
                          "application-icon", PACKAGE_ICON_NAME,
-                         "application-name", ptyxis_app_name (),
+                         "application-name", "Ptyxis (Minted)",
                          "artists", artists,
                          "copyright", "© 2023-2024 Christian Hergert, et al.",
                          "debug-info", debug_info,
                          "developer-name", "Christian Hergert",
                          "developers", developers,
-                         "issue-url", "https://gitlab.gnome.org/chergert/ptyxis/issues",
+                         "issue-url", "https://github.com/linuxmint/ptyxis-minted/issues",
                          "license-type", GTK_LICENSE_GPL_3_0,
                          "translator-credits", _("translator-credits"),
                          "version", PACKAGE_VERSION,
-                         "website", "https://gitlab.gnome.org/chergert/ptyxis",
+                         "website", "https://github.com/linuxmint/ptyxis-minted",
                          NULL);
 }
 
