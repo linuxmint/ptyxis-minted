@@ -191,6 +191,11 @@
         <attribute name="action">clipboard.copy</attribute>
       </item>
       <item>
+        <attribute name="label" translatable="yes">Copy Last _Output</attribute>
+        <attribute name="description" translatable="yes">Copy the last command and its output to clipboard</attribute>
+        <attribute name="action">terminal.copy-last-output</attribute>
+      </item>
+      <item>
         <attribute name="label" translatable="yes">Copy as _HTML</attribute>
         <attribute name="description" translatable="yes">Copy selection from terminal to clipboard with HTML formatting</attribute>
         <attribute name="action">clipboard.copy-as-html</attribute>

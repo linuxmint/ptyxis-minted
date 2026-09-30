@@ -75,6 +75,18 @@ struct _PtyxisTerminal
 
   guint               cell_height;
   guint               cell_width;
+
+  /* The last command and its output as text, taken when the command
+   * finished. Buffer rows change when the terminal is resized, so we keep
+   * the text rather than the rows.
+   */
+  char               *last_output;
+  /* Where the shell last drew its prompt and what it looked like, so the
+   * next prompt tells us where the command and its output ended.
+   */
+  char               *prompt_text;
+  glong               prompt_row;
+  guint               has_prompt_row : 1;
 };
 
 enum {
@@ -969,6 +981,10 @@ ptyxis_terminal_size_allocate (GtkWidget *widget,
   column_count = vte_terminal_get_column_count (VTE_TERMINAL (self));
   row_count = vte_terminal_get_row_count (VTE_TERMINAL (self));
   emit_size_changed = self->n_columns != column_count || self->n_rows != row_count;
+
+  /* Rows are re-wrapped by a resize, so the remembered prompt is stale */
+  if (emit_size_changed)
+    self->has_prompt_row = FALSE;
   self->n_columns = column_count;
   self->n_rows = row_count;
 
@@ -1152,9 +1168,106 @@ ptyxis_terminal_shortcuts_notify_cb (PtyxisTerminal  *self,
 }
 
 static void
+ptyxis_terminal_get_buffer_cursor (PtyxisTerminal *self,
+                                   glong          *column,
+                                   glong          *row)
+{
+  /* The row is counted from the start of the buffer, scrollback included,
+   * which is what vte_terminal_get_text_range_format() expects.
+   */
+  vte_terminal_get_cursor_position (VTE_TERMINAL (self), column, row);
+}
+
+#define MAX_LAST_OUTPUT_ROWS 10000
+
+static char *
+ptyxis_terminal_dup_rows (PtyxisTerminal *self,
+                          glong           start_row,
+                          glong           end_row)
+{
+  char *text = vte_terminal_get_text_range_format (VTE_TERMINAL (self),
+                                                   VTE_FORMAT_TEXT,
+                                                   start_row, 0,
+                                                   end_row,
+                                                   vte_terminal_get_column_count (VTE_TERMINAL (self)),
+                                                   NULL);
+
+  if (text != NULL)
+    g_strchomp (text);
+
+  return text;
+}
+
+/* Called when the shell is about to prompt. The prompt is already drawn and
+ * the cursor sits on it, so everything since the previous prompt (that prompt
+ * with the command typed on it, and the output) is the last command.
+ *
+ * The shell's preexec and precmd notifications can reach us out of order for
+ * quick commands, so we don't rely on preexec here.
+ */
+static void
+ptyxis_terminal_capture_last_output (PtyxisTerminal *self)
+{
+  glong column;
+  glong row;
+
+  ptyxis_terminal_get_buffer_cursor (self, &column, &row);
+
+  if (self->has_prompt_row && row - 1 >= self->prompt_row)
+    {
+      glong start_row = self->prompt_row;
+      glong end_row = row - 1;
+      g_autofree char *text = NULL;
+
+      /* Don't hold on to huge outputs, keep the most recent rows */
+      if (end_row - start_row >= MAX_LAST_OUTPUT_ROWS)
+        start_row = end_row - MAX_LAST_OUTPUT_ROWS + 1;
+
+      text = ptyxis_terminal_dup_rows (self, start_row, end_row);
+
+      /* Just pressing Enter at the prompt is not a command */
+      if (text != NULL &&
+          text[0] != 0 &&
+          !(start_row == end_row && g_strcmp0 (text, self->prompt_text) == 0))
+        {
+          g_free (self->last_output);
+          self->last_output = g_steal_pointer (&text);
+          gtk_widget_action_set_enabled (GTK_WIDGET (self), "terminal.copy-last-output", TRUE);
+        }
+    }
+
+  g_free (self->prompt_text);
+  self->prompt_text = ptyxis_terminal_dup_rows (self, row, row);
+  self->prompt_row = row;
+  self->has_prompt_row = TRUE;
+}
+
+static void
+copy_last_output_action (GtkWidget  *widget,
+                         const char *action_name,
+                         GVariant   *param)
+{
+  PtyxisTerminal *self = PTYXIS_TERMINAL (widget);
+
+  if (self->last_output != NULL && self->last_output[0] != 0)
+    {
+      PtyxisSettings *settings = ptyxis_application_get_settings (PTYXIS_APPLICATION_DEFAULT);
+
+      /* Both Ctrl+V and middle-click paste should get the output */
+      gdk_clipboard_set_text (gtk_widget_get_clipboard (widget), self->last_output);
+      gdk_clipboard_set_text (gtk_widget_get_primary_clipboard (widget), self->last_output);
+
+      if (ptyxis_settings_get_toast_on_copy_clipboard (settings))
+        ptyxis_terminal_toast (self, 1, _("Copied to clipboard"));
+    }
+}
+
+static void
 ptyxis_terminal_emit_shell_precmd (PtyxisTerminal *self)
 {
   g_assert (PTYXIS_IS_TERMINAL (self));
+
+  ptyxis_terminal_capture_last_output (self);
 
   g_signal_emit (self, signals[SHELL_PRECMD], 0);
 }
@@ -1229,6 +1342,8 @@ ptyxis_terminal_dispose (GObject *object)
   g_clear_handle_id (&self->size_dismiss_source, g_source_remove);
   g_clear_pointer (&self->custom_links, g_hash_table_unref);
   g_clear_pointer (&self->url, g_free);
+  g_clear_pointer (&self->last_output, g_free);
+  g_clear_pointer (&self->prompt_text, g_free);
 
   G_OBJECT_CLASS (ptyxis_terminal_parent_class)->dispose (object);
 }
@@ -1396,6 +1511,7 @@ ptyxis_terminal_class_init (PtyxisTerminalClass *klass)
   gtk_widget_class_install_action (widget_class, "clipboard.copy", NULL, copy_clipboard_action);
   gtk_widget_class_install_action (widget_class, "clipboard.copy-as-html", NULL, copy_clipboard_action);
   gtk_widget_class_install_action (widget_class, "clipboard.copy-link", NULL, copy_link_address_action);
+  gtk_widget_class_install_action (widget_class, "terminal.copy-last-output", NULL, copy_last_output_action);
   gtk_widget_class_install_action (widget_class, "clipboard.paste", NULL, paste_clipboard_action);
   gtk_widget_class_install_action (widget_class, "terminal.open-link", NULL, open_link_action);
   gtk_widget_class_install_action (widget_class, "terminal.select-all", "b", select_all_action);
@@ -1430,6 +1546,8 @@ ptyxis_terminal_init (PtyxisTerminal *self)
   g_set_object (&self->shortcuts, shortcuts);
 
   gtk_widget_init_template (GTK_WIDGET (self));
+
+  gtk_widget_action_set_enabled (GTK_WIDGET (self), "terminal.copy-last-output", FALSE);
 
   g_signal_connect_object (shortcuts,
                            "notify",
