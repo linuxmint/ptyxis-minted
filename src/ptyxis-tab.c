@@ -1675,7 +1675,8 @@ ptyxis_tab_dup_title (PtyxisTab *self)
   else if (self->has_foreground_process &&
            !ptyxis_str_empty0 (self->command_line) &&
            !ptyxis_str_empty0 (self->program_name) &&
-           !ptyxis_is_shell (self->program_name))
+           !ptyxis_is_shell (self->program_name) &&
+           !g_str_equal (self->program_name, "ssh"))
     g_string_append_printf (gstr, " — %s", self->command_line);
 
   return g_string_free (gstr, FALSE);
