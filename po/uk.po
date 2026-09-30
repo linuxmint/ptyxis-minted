@@ -2054,3 +2054,11 @@ msgstr "_Закрити вкладку"
 
 #~ msgid "Show more…"
 #~ msgstr "Показати більше…"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Копіювати останній _вивід"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Скопіювати останню команду та її вивід до буфера обміну"

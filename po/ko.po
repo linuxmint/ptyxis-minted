@@ -1713,3 +1713,11 @@ msgstr "탭 닫기(_C)"
 #: src/ptyxis-window.ui:584
 msgid "_My Computer"
 msgstr "내 컴퓨터(_M)"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "마지막 출력 복사(_O)"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "마지막 명령과 그 출력을 클립보드에 복사합니다"

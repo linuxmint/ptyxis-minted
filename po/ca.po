@@ -1966,3 +1966,11 @@ msgstr "Tan_ca la pestanya"
 
 #~ msgid "_My Computer"
 #~ msgstr "El _meu ordinador"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Copia l'última _sortida"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Copia l'última ordre i la seva sortida al porta-retalls"

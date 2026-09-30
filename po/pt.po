@@ -2172,3 +2172,11 @@ msgstr "Fechar _outros separadores"
 #, fuzzy
 msgid "_Close Tab"
 msgstr "_Fechar separador"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Copiar a última _saída"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Copiar o último comando e a sua saída para a área de transferência"

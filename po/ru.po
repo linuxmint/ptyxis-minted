@@ -1977,3 +1977,11 @@ msgstr "_Закрыть вкладку"
 
 #~ msgid "Show more…"
 #~ msgstr "Показать больше…"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Копировать последний _вывод"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Скопировать последнюю команду и её вывод в буфер обмена"

@@ -2016,3 +2016,11 @@ msgstr "D_iğer Sekmeleri Kapat"
 #: src/ptyxis-window.ui:858
 msgid "_Close Tab"
 msgstr "Sekmeyi _Kapat"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Son _çıktıyı kopyala"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Son komutu ve çıktısını panoya kopyala"

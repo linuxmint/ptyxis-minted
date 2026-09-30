@@ -1529,3 +1529,11 @@ msgstr "Tabblad _sluiten"
 #: src/ptyxis-window.ui:563
 msgid "_My Computer"
 msgstr "Mijn _Computer"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Laatste _uitvoer kopiëren"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "De laatste opdracht en de uitvoer ervan naar het klembord kopiëren"

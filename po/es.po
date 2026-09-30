@@ -4839,3 +4839,11 @@ msgstr "_Cerrar pestaña"
 
 #~ msgid "_Tabs"
 #~ msgstr "_Pestañas"
+
+#: src/ptyxis-terminal.ui:194
+msgid "Copy Last _Output"
+msgstr "Copiar la última _salida"
+
+#: src/ptyxis-terminal.ui:195
+msgid "Copy the last command and its output to clipboard"
+msgstr "Copiar el último comando y su salida al portapapeles"
