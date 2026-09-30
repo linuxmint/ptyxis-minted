@@ -1,3 +1,19 @@
+ptyxis (50.1+mint1) adrien; urgency=medium
+
+  * Native source format
+  * colors: Add Mint palette
+  * Set defaults for Linux Mint
+  * title: strip local user/hostname
+  * title: Don't show the command name for ssh
+  * headerbar: Hide subtitle
+  * overview: Stay in the overview when adding a new tab
+  * colors: Highlight shells by type
+  * context-menu: Add "Copy Last Output"
+  * l10n: Add translations for "Copy Last Output"
+  * maintenance: Change name and links
+
+ -- Clement Lefebvre <root@linuxmint.com>  Wed, 30 Sep 2026 22:39:38 +0100
+
 ptyxis (50.1-1ubuntu2) resolute; urgency=medium
 
   * d/p/ubuntu, d/rules: Tweak the Ubuntu color palette
