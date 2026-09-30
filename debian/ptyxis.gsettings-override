@@ -1,5 +1,11 @@
 [org.gnome.Ptyxis]
+audible-bell=false
+new-tab-position='next'
+default-columns=uint32 96
+default-rows=uint32 28
 enable-a11y=true
 
 [org.gnome.Ptyxis.Profile]
+palette='Mint'
+bold-is-bright=true
 custom-links=[('(?i)(Closes|Helps|Mitigates|RFP|ITP): ?#?(\\d+)', 'https://bugs.debian.org/$2'), ('(?i)LP:? ?#?(\\d+)', 'https://launchpad.net/bugs/$1')]
