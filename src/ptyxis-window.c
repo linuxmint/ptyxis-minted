@@ -601,9 +601,17 @@ ptyxis_window_tab_overview_create_tab_cb (PtyxisWindow   *self,
   g_assert (PTYXIS_IS_WINDOW (self));
   g_assert (ADW_IS_TAB_OVERVIEW (tab_overview));
 
+  AdwTabPage *selected = adw_tab_view_get_selected_page (self->tab_view);
+
   gtk_widget_activate_action (GTK_WIDGET (tab_overview), "win.new-tab", "(ss)", "", "");
 
-  return adw_tab_view_get_selected_page (self->tab_view);
+  /* Keep the current tab selected and stay in the overview. libadwaita would
+   * select the returned page and close the overview, so return NULL.
+   */
+  if (selected != NULL)
+    adw_tab_view_set_selected_page (self->tab_view, selected);
+
+  return NULL;
 }
 
 static void
