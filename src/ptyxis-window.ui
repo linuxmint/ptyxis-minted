@@ -634,11 +634,6 @@
                         </child>
                         <child type="title">
                           <object class="AdwWindowTitle">
-                            <binding name="subtitle">
-                              <lookup name="subtitle" type="PtyxisTab">
-                                <lookup name="active-tab">PtyxisWindow</lookup>
-                              </lookup>
-                            </binding>
                             <binding name="title">
                               <lookup name="title" type="PtyxisTab">
                                   <lookup name="active-tab">PtyxisWindow</lookup>
