@@ -1897,6 +1897,31 @@ ptyxis_tab_is_running (PtyxisTab  *self,
   return FALSE;
 }
 
+/* Whether a regular command (not a shell, and not ssh) is running in the
+ * foreground. Uses the last polled state and does not poll again.
+ */
+gboolean
+ptyxis_tab_is_running_command (PtyxisTab *self)
+{
+  g_autofree char *basename = NULL;
+
+  g_return_val_if_fail (PTYXIS_IS_TAB (self), FALSE);
+
+  if (self->leader_kind == PTYXIS_PROCESS_LEADER_KIND_REMOTE ||
+      self->leader_kind == PTYXIS_PROCESS_LEADER_KIND_SUPERUSER)
+    return FALSE;
+
+  if (!self->has_foreground_process || ptyxis_str_empty0 (self->program_name))
+    return FALSE;
+
+  if (ptyxis_is_shell (self->program_name))
+    return FALSE;
+
+  basename = g_path_get_basename (self->program_name);
+
+  return !g_str_equal (basename, "ssh");
+}
+
 static gboolean
 ptyxis_tab_force_quit_in_idle (gpointer data)
 {

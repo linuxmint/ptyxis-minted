@@ -124,6 +124,7 @@ void                ptyxis_tab_set_needs_attention                (PtyxisTab    
 PtyxisIpcContainer *ptyxis_tab_dup_container                      (PtyxisTab            *self);
 void                ptyxis_tab_set_container                      (PtyxisTab            *self,
                                                                    PtyxisIpcContainer   *container);
+gboolean            ptyxis_tab_is_running_command                 (PtyxisTab            *self);
 gboolean            ptyxis_tab_has_foreground_process             (PtyxisTab            *self,
                                                                    GPid                 *pid,
                                                                    char                **cmdline);

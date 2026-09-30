@@ -178,6 +178,75 @@ ptyxis_window_dressing_update (PtyxisWindowDressing *self)
                                   self->css_class, rm_bg, rm_fg,
                                   self->css_class, rm_bg, rm_fg);
           g_string_append_printf (string,
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.remote { background-color: %s; color: %s; }\n"
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.remote .icon-title-box { color: %s; }\n"
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.superuser { background-color: %s; color: %s; }\n"
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.superuser .icon-title-box { color: %s; }\n",
+                                  self->css_class, rm_bg, rm_fg,
+                                  self->css_class, rm_fg,
+                                  self->css_class, su_bg, su_fg,
+                                  self->css_class, su_fg);
+          /* The tab overview is not part of any session, so keep its header
+           * neutral even though the active tab may be remote or superuser.
+           */
+          g_string_append_printf (string,
+                                  "window.%s.remote .window-contents toolbarview.overview headerbar,\n"
+                                  "window.%s.remote .window-contents toolbarview.overview > revealer > windowhandle,\n"
+                                  "window.%s.superuser .window-contents toolbarview.overview headerbar,\n"
+                                  "window.%s.superuser .window-contents toolbarview.overview > revealer > windowhandle,\n"
+                                  "window.%s.command .window-contents toolbarview.overview headerbar,\n"
+                                  "window.%s.command .window-contents toolbarview.overview > revealer > windowhandle { background-color: %s; color: %s; }\n",
+                                  self->css_class, self->css_class, self->css_class, self->css_class, self->css_class, self->css_class,
+                                  titlebar_bg, titlebar_fg);
+          g_string_append_printf (string,
+                                  "window.%s .close-list list, window.%s .close-list row { border-radius: 0; }\n"
+                                  "window.%s row.close-remote { box-shadow: inset 4px 0 0 %s; border-radius: 0; }\n"
+                                  "window.%s row.close-superuser { box-shadow: inset 4px 0 0 %s; border-radius: 0; }\n",
+                                  self->css_class, self->css_class,
+                                  self->css_class, rm_bg,
+                                  self->css_class, su_bg);
+          g_string_append_printf (string,
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.command { background-color: %s; color: %s; }\n"
+                                  "window.%s .window-contents toolbarview.overview tabthumbnail.command .icon-title-box { color: %s; }\n"
+                                  "window.%s row.close-command { box-shadow: inset 4px 0 0 %s; border-radius: 0; }\n",
+                                  self->css_class, bell_bg, bell_fg,
+                                  self->css_class, bell_fg,
+                                  self->css_class, bell_bg);
+          /* The active tab gets a solid highlight rather than libadwaita's
+           * translucent overlay on top of the headerbar color.
+           */
+          g_string_append_printf (string,
+                                  "window.%s tabbar tab:selected:not(.remote):not(.superuser):not(.command) { background-color: mix(%s,%s,.12); color: %s; }\n",
+                                  self->css_class, titlebar_bg, titlebar_fg, titlebar_fg);
+          /* Tabs in the tab bar are not filled, they get an indicator along the
+           * bottom edge in the same color as the headerbar for that session type.
+           */
+          g_string_append_printf (string,
+                                  "window.%s tabbar tab.remote { box-shadow: inset 0 -3px 0 %s; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n"
+                                  "window.%s tabbar tab.superuser { box-shadow: inset 0 -3px 0 %s; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n"
+                                  "window.%s tabbar tab.command { box-shadow: inset 0 -3px 0 %s; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n",
+                                  self->css_class, rm_bg,
+                                  self->css_class, su_bg,
+                                  self->css_class, bell_bg);
+          /* The headerbar takes the color of the active tab's session type, but
+           * the tab bar stays neutral so the colored tabs stand out in it.
+           */
+          g_string_append_printf (string,
+                                  "window.%s.remote tabbar,\n"
+                                  "window.%s.remote tabbar .box,\n"
+                                  "window.%s.superuser tabbar,\n"
+                                  "window.%s.superuser tabbar .box,\n"
+                                  "window.%s.command tabbar,\n"
+                                  "window.%s.command tabbar .box { background-color: %s; color: %s; }\n",
+                                  self->css_class, self->css_class, self->css_class,
+                                  self->css_class, self->css_class, self->css_class,
+                                  titlebar_bg, titlebar_fg);
+          g_string_append_printf (string,
+                                  "window.%s.command .window-contents headerbar { background-color: %s; color: %s; }\n"
+                                  "window.%s.command .window-contents toolbarview > revealer > windowhandle { background-color: %s; color: %s; }\n",
+                                  self->css_class, bell_bg, bell_fg,
+                                  self->css_class, bell_bg, bell_fg);
+          g_string_append_printf (string,
                                   "window.%s.superuser .window-contents headerbar { background-color: %s; color: %s; }\n"
                                   "window.%s.superuser .window-contents toolbarview > revealer > windowhandle { background-color: %s; color: %s; }\n",
                                   self->css_class, su_bg, su_fg,

@@ -86,6 +86,7 @@ struct _PtyxisWindow
 
   guint                  visual_bell_source;
   guint                  focus_active_tab_source;
+  guint                  update_tab_colors_source;
 
   guint                  tab_overview_animating : 1;
   guint                  disposed : 1;
@@ -298,6 +299,8 @@ ptyxis_window_focus_active_tab_cb (gpointer data)
   return G_SOURCE_REMOVE;
 }
 
+static void ptyxis_window_queue_update_tab_colors (PtyxisWindow *self);
+
 static void
 ptyxis_window_tab_overview_notify_open_cb (PtyxisWindow   *self,
                                            GParamSpec     *pspec,
@@ -305,6 +308,8 @@ ptyxis_window_tab_overview_notify_open_cb (PtyxisWindow   *self,
 {
   g_assert (PTYXIS_IS_WINDOW (self));
   g_assert (ADW_IS_TAB_OVERVIEW (tab_overview));
+
+  ptyxis_window_queue_update_tab_colors (self);
 
   /* For some reason when we get here the selected page is not
    * getting focused. So work around libadwaita by deferring the
@@ -410,6 +415,87 @@ update_visible_and_maybe_close (PtyxisWindow *self)
 }
 
 static void
+ptyxis_window_apply_tab_colors (PtyxisWindow *self,
+                                GtkWidget    *widget,
+                                GType         tab_type,
+                                GType         thumbnail_type)
+{
+  for (GtkWidget *child = gtk_widget_get_first_child (widget);
+       child != NULL;
+       child = gtk_widget_get_next_sibling (child))
+    {
+      g_autoptr(AdwTabPage) page = NULL;
+      GtkWidget *content;
+
+      if (!G_TYPE_CHECK_INSTANCE_TYPE (child, tab_type) &&
+          !G_TYPE_CHECK_INSTANCE_TYPE (child, thumbnail_type))
+        {
+          ptyxis_window_apply_tab_colors (self, child, tab_type, thumbnail_type);
+          continue;
+        }
+
+      gtk_widget_remove_css_class (child, "remote");
+      gtk_widget_remove_css_class (child, "superuser");
+      gtk_widget_remove_css_class (child, "command");
+
+      g_object_get (child, "page", &page, NULL);
+
+      if (page != NULL &&
+          (content = adw_tab_page_get_child (page)) &&
+          PTYXIS_IS_TAB (content))
+        {
+          PtyxisProcessLeaderKind kind;
+
+          g_object_get (content, "process-leader-kind", &kind, NULL);
+
+          if (kind == PTYXIS_PROCESS_LEADER_KIND_SUPERUSER)
+            gtk_widget_add_css_class (child, "superuser");
+          else if (kind == PTYXIS_PROCESS_LEADER_KIND_REMOTE)
+            gtk_widget_add_css_class (child, "remote");
+          else if (ptyxis_tab_is_running_command (PTYXIS_TAB (content)))
+            gtk_widget_add_css_class (child, "command");
+        }
+    }
+}
+
+static gboolean
+ptyxis_window_update_tab_colors_cb (gpointer data)
+{
+  PtyxisWindow *self = data;
+  GType tab_type = g_type_from_name ("AdwTab");
+  GType thumbnail_type = g_type_from_name ("AdwTabThumbnail");
+
+  g_assert (PTYXIS_IS_WINDOW (self));
+
+  self->update_tab_colors_source = 0;
+
+  if (tab_type != G_TYPE_INVALID && thumbnail_type != G_TYPE_INVALID)
+    {
+      ptyxis_window_apply_tab_colors (self, GTK_WIDGET (self->tab_bar), tab_type, thumbnail_type);
+      ptyxis_window_apply_tab_colors (self, GTK_WIDGET (self->tab_overview), tab_type, thumbnail_type);
+    }
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+ptyxis_window_queue_update_tab_colors (PtyxisWindow *self)
+{
+  g_assert (PTYXIS_IS_WINDOW (self));
+
+  if (self->update_tab_colors_source == 0 && !self->disposed)
+    self->update_tab_colors_source = g_idle_add (ptyxis_window_update_tab_colors_cb, self);
+}
+
+static void
+ptyxis_window_tab_process_leader_kind_cb (PtyxisWindow *self,
+                                          GParamSpec   *pspec,
+                                          PtyxisTab    *tab)
+{
+  ptyxis_window_queue_update_tab_colors (self);
+}
+
+static void
 ptyxis_window_page_attached_cb (PtyxisWindow *self,
                                 AdwTabPage   *page,
                                 int           position,
@@ -418,6 +504,18 @@ ptyxis_window_page_attached_cb (PtyxisWindow *self,
   g_assert (PTYXIS_IS_WINDOW (self));
   g_assert (ADW_IS_TAB_PAGE (page));
   g_assert (ADW_IS_TAB_VIEW (tab_view));
+
+  g_signal_connect_object (adw_tab_page_get_child (page),
+                           "notify::process-leader-kind",
+                           G_CALLBACK (ptyxis_window_tab_process_leader_kind_cb),
+                           self,
+                           G_CONNECT_SWAPPED);
+  g_signal_connect_object (adw_tab_page_get_child (page),
+                           "notify::command-line",
+                           G_CALLBACK (ptyxis_window_tab_process_leader_kind_cb),
+                           self,
+                           G_CONNECT_SWAPPED);
+  ptyxis_window_queue_update_tab_colors (self);
 
   update_visible_and_maybe_close (self);
 }
@@ -431,6 +529,10 @@ ptyxis_window_page_detached_cb (PtyxisWindow *self,
   g_assert (PTYXIS_IS_WINDOW (self));
   g_assert (ADW_IS_TAB_PAGE (page));
   g_assert (ADW_IS_TAB_VIEW (tab_view));
+
+  g_signal_handlers_disconnect_by_func (adw_tab_page_get_child (page),
+                                        G_CALLBACK (ptyxis_window_tab_process_leader_kind_cb),
+                                        self);
 
   update_visible_and_maybe_close (self);
 }
@@ -1450,6 +1552,7 @@ ptyxis_window_notify_process_leader_kind_cb (PtyxisWindow *self,
   gtk_widget_remove_css_class (GTK_WIDGET (self), "container");
   gtk_widget_remove_css_class (GTK_WIDGET (self), "remote");
   gtk_widget_remove_css_class (GTK_WIDGET (self), "superuser");
+  gtk_widget_remove_css_class (GTK_WIDGET (self), "command");
 
   if (kind == PTYXIS_PROCESS_LEADER_KIND_SUPERUSER)
     gtk_widget_add_css_class (GTK_WIDGET (self), "superuser");
@@ -1457,6 +1560,8 @@ ptyxis_window_notify_process_leader_kind_cb (PtyxisWindow *self,
     gtk_widget_add_css_class (GTK_WIDGET (self), "remote");
   else if (kind == PTYXIS_PROCESS_LEADER_KIND_CONTAINER)
     gtk_widget_add_css_class (GTK_WIDGET (self), "container");
+  else if (ptyxis_tab_is_running_command (tab))
+    gtk_widget_add_css_class (GTK_WIDGET (self), "command");
 }
 
 static void
@@ -1967,6 +2072,7 @@ ptyxis_window_dispose (GObject *object)
   g_binding_group_set_source (self->profile_bindings, NULL);
   g_signal_group_set_target (self->selected_page_signals, NULL);
   g_clear_handle_id (&self->focus_active_tab_source, g_source_remove);
+  g_clear_handle_id (&self->update_tab_colors_source, g_source_remove);
   g_clear_object (&self->parking_lot);
   g_clear_object (&self->interface_style_action);
 
@@ -2181,6 +2287,11 @@ ptyxis_window_init (PtyxisWindow *self)
                                  G_CONNECT_SWAPPED);
   g_signal_group_connect_object (self->active_tab_signals,
                                  "notify::process-leader-kind",
+                                 G_CALLBACK (ptyxis_window_notify_process_leader_kind_cb),
+                                 self,
+                                 G_CONNECT_SWAPPED);
+  g_signal_group_connect_object (self->active_tab_signals,
+                                 "notify::command-line",
                                  G_CALLBACK (ptyxis_window_notify_process_leader_kind_cb),
                                  self,
                                  G_CONNECT_SWAPPED);

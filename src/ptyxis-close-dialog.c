@@ -120,6 +120,7 @@ _ptyxis_close_dialog_new (GtkWindow *parent,
                                               "discard", ADW_RESPONSE_DESTRUCTIVE);
 
   group = adw_preferences_group_new ();
+  gtk_widget_add_css_class (group, "close-list");
   adw_alert_dialog_set_extra_child (ADW_ALERT_DIALOG (dialog), group);
 
   smaller = pango_attr_list_new ();
@@ -132,6 +133,7 @@ _ptyxis_close_dialog_new (GtkWindow *parent,
       g_autofree char *title = NULL;
       g_autofree char *subtitle = NULL;
       GtkWidget *row;
+      PtyxisProcessLeaderKind kind;
       SaveRequest sr;
       GPid pid;
 
@@ -139,7 +141,6 @@ _ptyxis_close_dialog_new (GtkWindow *parent,
         {
           g_utf8_make_valid (cmdline, -1);
           title = g_steal_pointer (&cmdline);
-          subtitle = g_strdup_printf (_("Process %d"), pid);
         }
       else
         {
@@ -152,8 +153,20 @@ _ptyxis_close_dialog_new (GtkWindow *parent,
 
       row = adw_action_row_new ();
 
+      g_object_get (tab, "process-leader-kind", &kind, NULL);
+
+      if (kind == PTYXIS_PROCESS_LEADER_KIND_SUPERUSER)
+        gtk_widget_add_css_class (row, "close-superuser");
+      else if (kind == PTYXIS_PROCESS_LEADER_KIND_REMOTE)
+        gtk_widget_add_css_class (row, "close-remote");
+      else if (ptyxis_tab_is_running_command (tab))
+        gtk_widget_add_css_class (row, "close-command");
+
       adw_preferences_row_set_title (ADW_PREFERENCES_ROW (row), title);
-      adw_action_row_set_subtitle (ADW_ACTION_ROW (row), subtitle);
+
+      if (subtitle != NULL)
+        adw_action_row_set_subtitle (ADW_ACTION_ROW (row), subtitle);
+
       adw_preferences_group_add (ADW_PREFERENCES_GROUP (group), row);
 
       sr.tab = g_object_ref (tab);
